@@ -44,7 +44,6 @@ def calculate_sizes(v):
     # Your code goes here
     size = 1
     
-<<<<<<< HEAD
     if v.left:
         size += calculate_sizes(v.left)
     if v.right:
@@ -52,15 +51,6 @@ def calculate_sizes(v):
     
     v.size = size
     return size
-=======
-    if v.left or v.right:
-        if v.left:
-            size += calculate_sizes(v.left)
-        if v.right:
-            size += calculate_sizes(v.right)
-    else:
-        return size
->>>>>>> 7dedda8 (complete problem 1a)
     
 
 
@@ -98,6 +88,7 @@ def find_vertex(r):
             return vert
         if left is not None:
             if right is None:
+
                 vert = vert.left
                 continue
             if left.size > r.size / 2:
