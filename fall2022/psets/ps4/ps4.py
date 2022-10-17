@@ -32,7 +32,30 @@ returns: An key-value pair (Kj, Vj) such that Kj is an i’th smallest key.
 
 def QuickSelect(arr, i):
     # Your code here
+    if len(arr) <= 1:
+        return arr[0]
+    
+    rnd_idx = get_random_index(arr)
+    rnd_key = arr[rnd_idx][0]
 
+    less = []
+    equal = []
+    greater = []
+
+    for j in range(len(arr)):
+        if arr[j][0] < rnd_key:
+            less.append(arr[j])
+        elif arr[j][0] > rnd_key:
+            greater.append(arr[j])
+        else:
+            equal.append(arr[j])
+    
+    if i < len(less):
+        return QuickSelect(less, i)
+    elif i >= len(less) + len(equal):
+        return QuickSelect(greater, i - len(less) - len(equal))
+    else:
+        return equal[0]
     # Feel free to use get_random_index(arr) or get_random_int(start_inclusive, end_inclusive)
     # ... see the helper functions below
     pass
@@ -54,8 +77,13 @@ NOTE: This is different from the QuickSelect definition. This function takes in 
 def MergeSortSelect(arr, query_list):
     # Only call MergeSort once
     # ... MergeSort has already been implemented for you (see below)
-    pass
-    return [(0, -1)] * len(query_list)  # replace this line with your return
+    fin = []
+    arr = MergeSort(arr)
+    
+    for i in query_list:
+        fin.append(arr[i])
+
+    return fin
 
 
 ##################################
@@ -67,7 +95,7 @@ def MergeSortSelect(arr, query_list):
 
 def experiments():
     # Edit this parameter
-    k = [1, 1, 1, 1, 1]
+    k = [20,22,24,26,28]
 
     # Feel free to edit these initial parameters
 
