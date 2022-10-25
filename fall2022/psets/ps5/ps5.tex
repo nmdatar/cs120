@@ -1,24 +1,24 @@
 \documentclass[11pt]{article}
 \usepackage{classTools}
-
+\usepackage{listings}
 
 \begin{document}
 
 % To include a problems set header, use the psHeader command
 \psHeader{5}{Wed Oct. 19, 2022 (11:59pm)}
 
-\textbf{Your name: }
+\textbf{Your name: Nikhil Datar}
 
-\textbf{Collaborators: }
+\textbf{Collaborators: Dhrub Singh}
 
-\textbf{No. of late days used on previous psets: }
+\textbf{No. of late days used on previous psets: 4}
 
-\textbf{No. of late days used after including this pset: }
+\textbf{No. of late days used after including this pset: 5}
 
 \begin{enumerate}
  
  \item (Exponential-Time Coloring) 
-  In the \href{https://github.com/Harvard-CS-120/cs120/tree/main/fall2022/psets}{Github repository} for PS5, we have given you basic data structures for graphs (in adjacency list representation) and colorings, an implementation of the Exhaustive-Search $k$-Coloring algorithm, and a variety of test cases (graphs) for coloring algorithms.
+  In the \href{https://github.com/Harvard-CS-120/cs120/tree/main/fall2022/psets}{Github repository} for PS5, we have given you basic data structures for graphs (in adjacency list representation) and colorings, an implementation of the Exhaustive-Search $k$-Coloring algorithm, and a variety of test cases (graphs) for coloring algorithms. 
 
   \begin{enumerate}
       \item Implement the $O(n+m)$-time algorithm for 2-coloring that we covered in class in the function \texttt{bfs\_2\_coloring}, verifying its correctness by running \texttt{python3 -m ps5\_tests 2}.
@@ -29,8 +29,9 @@
       
       \item Compare the efficiency of Exhaustive-Search 3-coloring and the $O(1.89^n)$-time algorithm. Specifically, identify the largest instance each algorithm is able to solve (within a time limit you specify, e.g. 10 seconds) and the smallest instance each algorithm is unable to solve (again within that same time limit). \\
     
-    In addition to these numeric values, please provide a brief explanation of why these results make sense, based on your knowledge of how each algorithm finds a valid coloring. For this part, there is no need to go through every combination of parameters; feel free to give just the largest and smallest instances each algorithm can solve and speak generally as to why one algorithm performs better than the other. More instructions can be found in \texttt{ps5\_experiments}.
-      
+    In addition to these numeric values, please provide a brief explanation of why these results make sense, based on your knowledge of how each algorithm finds a valid coloring. For this part, there is no need to go through every combination of parameters; feel free to give just the largest and smallest instances each algorithm can solve and speak generally as to why one algorithm performs better than the other. More instructions can be found in \texttt{ps5\_experiments}. \\
+    
+    After running the experiments using the default parameters, I found that the largest $n$ which each algorithm was able to finish was $n=36$ the $O(1.89^n)$ algorithm for 3-coloring (ISET + BFS), whereas it was $n=20$ for Exhaustive-Search 3-coloring. Additionally, I found that the lowest $n$ failed for both algorithms was $n=30$. Generally, we know from lecture that the exhaustive search algorithm has to verify coloring across all $m$ edges in $G$ for all the color combinations, for which there are $3^n$ combinations. Thus, the overall runtime of exhaustive search 3-coloring is $O(m \cdot 3^n)$. We know from the SRE that the ISET + BFS 3-coloring algorithm is $O(1.89^n)$, which is indeed faster than the exhaustive search algorithm. Thus, indeed it makes sense that ISET + BFS can solve a clustering with $n$ larger than that of the largest $n$ exhaustive search can solve when the timeout limit equals 10. The fact that the lowest $n$ failed for both was equal may be due to variations in implementation, such as the implementations not necessarily being optimized. Additionally, an interesting point to note is that the exhaustive search algorithm is indeed dependent on the number of edges $m$, whereas the ISET + BFS algorithm is not. 
   \end{enumerate}
 
  \item (Reductions Between Variants of IndependentSet) 
@@ -43,11 +44,78 @@
 For each part below, be sure to both prove correctness and analyze runtime for the algorithms you provide.
 
  \begin{enumerate}
- \item Suppose that there is an algorithm running in time $T(n,m)\geq n+m$ that solves IndependentSet-OptimizationSearch on graphs with at most $n$ vertices and at most $m$ edges.  Prove that there is an algorithm running in time $O(T(n,m))$ that solves IndependentSet-ThresholdDecision. 
- \item Suppose that there is an algorithm running in time $T(n,m)\geq n+m$ that solves IndependentSet-ThresholdSearch on graphs with at most $n$ vertices and at most $m$ edges.  Prove that there is an algorithm running in time $O((\log n)\cdot T(n,m))$ that solves IndependentSet-OptimizationSearch.  (Hint: Come up with a reduction that makes at most $\log n$ oracle calls.  You might find it useful to first find one that makes at most $n$ oracle calls.)
+ \item Suppose that there is an algorithm running in time $T(n,m)\geq n+m$ that solves IndependentSet-OptimizationSearch on graphs with at most $n$ vertices and at most $m$ edges.  Prove that there is an algorithm running in time $O(T(n,m))$ that solves IndependentSet-ThresholdDecision. \\
+
+Algorithm: First, make an oracle call to IndependentSet-OptimizationSearch. Then, check the size of the set returned from the oracle call. If that size is less than $k$ as the input in IndependentSet-Threshold, then return False. If the size is instead greater than or equal to $k$ as input, then we return True. \\
+
+Runtime: This algorithm runs as desired in time $O(T(n,m))$. We make one oracle call of time $O(T(n,m))$, and then follow with constant time $O(1)$ steps of checking size and making comparisons to determine which boolean value to return, when we check if the size is greater than or equal to or less than $k$. Thus, the overall time is $O(T(n,m))$. \\
+
+Correctness: We can assume that the oracle IndependentSet-OptimizationSearch correctly returns the the largest independent set within $G$. Thus, if there is an independent set of size at least $k$, the oracle call would return either that independent set or (if it exists) one with a larger size. Then we know that the simple conditionals are designed to turn the question of whether the size is at least $k$ into boolean data, which is desired, so the algorithm is correct. 
+ 
+ \item Suppose that there is an algorithm running in time $T(n,m)\geq n+m$ that solves IndependentSet-ThresholdSearch on graphs with at most $n$ vertices and at most $m$ edges.  Prove that there is an algorithm running in time $O((\log n)\cdot T(n,m))$ that solves IndependentSet-OptimizationSearch.  (Hint: Come up with a reduction that makes at most $\log n$ oracle calls.  You might find it useful to first find one that makes at most $n$ oracle calls.) \\
+ 
+ Algorithm: We can show that a binary search on the values of $k$ will be sufficient to solve this algorithm in the desired runtime $O((\log n)\cdot T(n,m))$. We will define an algorithm as follows in the pseudocode below:
+ 
+ \begin{lstlisting}
+ left = 1
+ n = num_nodes in G - 1
+ right = n
+ final_set
+ 
+ if IndependentSet-ThresholdSearch(G, n) returns a set:
+        return the same set
+ 
+ while left <= right:
+        set a k = (left + right)/2
+        result = IndependentSet-ThresholdSearch(G, k)
+        if result == a set (that is a set of size at least k exists):
+            final_set = result
+            left = k + 1
+        else: 
+            right = k - 1
+            
+    return final_set
+ \end{lstlisting} \\
+ 
+ 
+ Runtime: The algorithm makes $\log n$ oracle calls to the IndependentSet-ThresholdSearch oracle, each of which takes $O(T(n,m))$ time. The $\log n$ oracle calls comes from the fact that we are checking through the possible values for $k$ using binary search. Thus, the total runtime of the algorithm is, as desired, $O((\log n)\cdot T(n,m))$. \\
+ 
+ Correctness: The algorithm can be seen to be correct because first, we iterate through all the possible values of $k$ using binarySearch. The implementation we gave, or setting the lowerbound to one greater than the value of $k$ just checked if the set of size $k$ exists or the upperbound to one less than $k$ if it doesn't exist will correctly iterate through all values of $k$ similar to typical uses of binarySearch. Then, we can ensure that if there is indeed an independent set of at least size $k$ then we will find it, as we can assume correctness of the oracle call to IndependentSet-Threshold Search. If not independent set of size greater than $1$ exists, for example, the while loop will never return a set until $right$ decreases and is equal to 1, at which point an array of only one element will be returned. 
+ 
+ 
   \item Suppose that there is an algorithm 
  running in time $T(n,m)\geq n+m$ that solves IndependentSet-ThresholdDecision.   Prove that there is an algorithm running in time $O(n\cdot T(n,m))$ that solves IndependentSet-ThresholdSearch.
-(Hint: Show that $G$ has an independent set of size at least $k$ containing vertex $v$ iff $G-N(v)$ has an independent set of size at least $k-1$, where $G-N(v)$ denotes the graph obtained by removing $v$ and all of its neighbors from $G$.  Use this fact and the oracle to determine for each vertex $v$, whether or not to include $v$ in the independent set.  Be sure to update the graph appropriately after each decision.)
+(Hint: Show that $G$ has an independent set of size at least $k$ containing vertex $v$ iff $G-N(v)$ has an independent set of size at least $k-1$, where $G-N(v)$ denotes the graph obtained by removing $v$ and all of its neighbors from $G$.  Use this fact and the oracle to determine for each vertex $v$, whether or not to include $v$ in the independent set.  Be sure to update the graph appropriately after each decision.) \\
+
+Before giving an algorithm, we first want to give a proof of the following statement: $G$ has an independent set of size at least $k$ containing vertex $v$ iff $G-N(v)$ has an independent set of size at least $k-1$. \\
+
+Proof: ($\longrightarrow$ direction): First, assume $G$ has an independent set of size $\geq k$ containing $v$. By defition, the independent set can't contain any of $v's$ neighbors. Thus, if we remove $v$ from the independent set, the remaining set has size $k-1$, and does not contain any of the neighbor's of $v$. Thus, the graph $G - N(v)$ by definition can create this remaining independent set! So, we have proved the forward direction. \\
+
+($\longleftarrow$ direction): Assume $G - N(v)$ has independent set of size $\geq k - 1$. Then, this independent set by definition does not contain $v$ or any of its neighbors. So, if we consider the graph $G$ and add back $v$ into this independent set, we are not violating the independent set property (because none of $v's$ neighbors were contained originally), yet we have created an independent set of size $\geq k$. Thus, we have proved the backwards direction. \\
+
+Algorithm: Now that we have proved the statement above, we can proceed with the algorithm using that knowledge. 
+
+\begin{lstlisting}
+visited = set() # init empty set
+oracle = Oracle(IndependentSet Threshold Decision)
+ind_set = set() # init empty set
+
+if not oracle(G, k): # check if ind_set even possible
+    return None 
+
+for vertex in G:
+    if vertex not in visited:
+        if oracle(G - N(v), k - 1):
+            ind_set.add(vertex)
+            visited.update(N(v))
+        else: 
+            # we do nothing, don't add to cumulative ind_set
+return ind_set
+\end{lstlisting}\\
+
+Runtime: First, we have an outer loop that iterates through all the vertices within the graph. Then, within the loop, we call the oracle once, which takes time $O(T(n, m))$, while all other operations take constant time $O(1)$. Thus, the dominating time within the loop comes from the oracle call, so the overall runtime of the algorithm is simply as desired $O(n\cdot T(n,m))$. \\
+
+Correctness: The algorithm iterates through all vertices if not a neighbor of a vertex already added to the independent set. At each vertex, it checks if $v$ should be in the independent set by checking if an independent set of size $k-1$ exists for $G - N(v)$. We can ensure we get the correct decision to this question based on the oracle call to the decision problem. Then, based on the proof we gave earlier, if $G - N(v)$ has an independent set of size $ \geq k-1$, we can guarantee $G$ has one containing $v$ of size $\geq k$. Thus, we can safely add the current vertex to the independent set as done in the algorithm. Thus, our algorithm is correct because we check through all vertices (so we hit each one) and then can assume correctness of the decision oracle. 
  \end{enumerate}
  We remark (but you don't need to submit anything) that the combination of the three previous problem parts means that for every constant $c\in [1,2]$, if there is an algorithm solving any one of the three problems in time $(n+m)^{O(1)}\cdot c^n$, there are algorithms solving the other two problems in $(n+m)^{O(1)}\cdot c^n$ time.  The best known algorithm (by Xiao and Nagamochi, 2013) has $c \approx 1.1996$.
  
