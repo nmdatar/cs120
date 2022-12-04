@@ -189,8 +189,20 @@ def iset_bfs_3_coloring(G):
 # If no coloring is possible, resets all of G's colors to None and returns None.
 def sat_3_coloring(G):
     solver = Glucose3()
-
+    k = 3
     # TODO: Add the clauses to the solver
+    for i in range(G.N):
+        solver.add_clause([j for j in range(k * i + 1, k * (i+1) + 1)])
+    
+    for i in range(G.N): # Loop through nodes
+        for m in range(k-1): # First color
+            for n in range(m + 1, k): # Second color
+                solver.add_clause([-(k * i + m + 1), -(k*i + n + 1)])
+    
+    for u in range(G.N):
+        for v in G.edges[u]:
+            for c in range(k):
+                solver.add_clause([-(k * u + c + 1), -(k * v + c + 1)])
 
     # Attempt to solve, return None if no solution possible
     if not solver.solve():
@@ -201,7 +213,12 @@ def sat_3_coloring(G):
     solution = solver.get_model()
 
     # TODO: If a solution is found, convert it into a coloring and update G.colors
-
+    colors = []
+    for i in range(len(solution)):
+        if solution[i] > 0:
+            colors.append(i % k)
+    
+    G.colors = colors
     return G.colors
 
 
