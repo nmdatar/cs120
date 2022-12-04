@@ -10,13 +10,13 @@
 \psHeader{8}{FRI. Nov 18, 2022 (11:59pm)}
 
 
-\textbf{Your name: }
+\textbf{Your name: Nikhil Datar}
 
-\textbf{Collaborators: }
+\textbf{Collaborators: Adam Zhou, Jack Tian}
 
-\textbf{No. of late days used on previous psets: }
+\textbf{No. of late days used on previous psets: 6}
 
-\textbf{No. of late days used after including this pset: }
+\textbf{No. of late days used after including this pset: 8}
 
 \vspace{1em}
 
@@ -33,21 +33,78 @@
         {A satisfying assignment $\alpha\in\zo^n$ in which at least $k$ variables are set to 0 (if one exists)}
     
     \begin{enumerate}
-        \item Prove that $k$-False PositiveMonotoneSAT is $\NPsearch$-complete, even when $k=n/2$.  (Hint: reduce from SAT, replacing negated variables with new ones and adding additional clauses.)
-        \item Prove that if we fix $k=3$, then $k$-False PositiveMonotoneSAT is in $\Psearch$. (Hint: show that it suffices to consider assignments in which exactly 3 variables are set to 0.)
+        \item Prove that $k$-False PositiveMonotoneSAT is $\NPsearch$-complete, even when $k=n/2$.  (Hint: reduce from SAT, replacing negated variables with new ones and adding additional clauses.) \\
+        
+        Note: k-False PositiveMonotoneSAT (PM/PMSAT) is in $NP_{\text{search}}$, and a verifier will check if a satisfying assignment $\alpha$ satisfies the PM formula. Additionally, PMSAT is $NP_{\text{search}}$-hard. Since we know all NP problems reduce to the SAT problem, we must show $SAT \leq_p PMSAT$. \\
+        
+        We choose to solve by following the provided hint, specifically by conducting a SAT-based reduction. This will involve first preprocessing the SAT problem into the PMSAT problem, then running the oracle call to PMSAT, and finally post-processing the output assignment $\alpha^'$ of the PMSAT algorithm to match the original assignment $\alpha$ of the SAT problem. If no such output exists, the algorithm would output $\bot$ \\
+         
+        Preprocessing: In preprocessing, we want to transform the SAT problem to the positive monotone CNF formula as defined above. To remove negations, consider the positive monotone CNF formula $\varphi(x_0, \dots, x_{n-1}, \neg x_0, \dots, \neg x_{n-1})$, in which we replace $y_0, \dots, y_{n-1} = \neg x_0, \dots, \neg x_{n-1}$. We do this to satisfy the argument for no negation of variables within the input CNF formula. We want to then add clauses to ensure that one of these variables is indeed True by adding the clause $(x_i \vee y_i)  \forall i=0, \dots, n-1$. However, we also want to ensure that both $x_i$ and $\neg x_i$ are not set to $1$, as we must find $k$ variables that are set to false. If we ignored this an unsatisfying argument would result from the oracle call. This is why we have the choice of $k=n$, and we add the $n$ variables defined above to make the CNF formula defined above have $2n$ variables. Thus, we have created pre-processing steps such that there are no negation variables, (through variable replacement), a variable and its corresponding negation has at least one true value, with one having to be false ($x_i$ vs $y_i$). Then, we have arrived at an input that is sufficient to proceed with the oracle call. \\
+        
+        Oracle: Now we are ready to make the oracle call to $k-False PositiveMonotoneSAT$, which we do with the inputs provided in the pre-processing step. Thus, half the variables will end up being 0 (false). \\
+        
+        Post-process: First off, if $\bot$ is returned then we simply use that as the solution for the reduction. In the post-process step, we backtrace the defined variables back to the original variables and simply determine the mapping for $x_0, \cdots x_{n-1}$ where $k$ such variables are set to $0$. In particular, as we will output a solution to the PMSAT problem, we simply convert the output assignments back to the original set of $n$ variables, rather than $2n$. Thus, if some $x_i = 1$ or $x_i = 0$ we keep that assignment. However, for a variable we created ($y_i$), we can consider the opposite for the corresponding variables, since each $y_i$ represents negation of the original variables (Using the notation defined above in the preprocessing step). Since SAT is NPsearch-complete, and we found the reduction, it must be that k-False PositiveMonotoneSAT is NPsearch-complete as well. \\
+        
+        For runtime, we can consider multiple parts. First, note that the first contributing part is the replacement of clauses in the original CNF formula. Note that if there are $m$ clauses, then this replacement will run in $O(m)$. Creating the extra $n$ variables, and pairing on the other hand will create a runtime of $O(n)$, since there are $n$ variables. The runtime of the oracle call can be assumed to be constant runtime. Thus, the overall runtime of the algorithm is $O(m + n)$. \\
+        
+        For correctness, we must prove two distinct claims, both of which are achieved through induction. \\
+        
+        1. If $\phi$ is satisfiable, then $\phi^' =  R(\phi)$. We conduct a direct proof. Assume $\phi$ is satisfiable. We then want to define $\phi = \phi_0, \phi_1, \dots, \phi_m = R(\phi)$ since the algorithm traverses the initial clauses and preprocesses them to align with clauses required for PMSAT and adding paired clauses as needed. This will travel through all $m$ clauses. We can prove the statement with induction. \\
+        
+        Base case: For the base case, we consider when the $i=0$, that is the number of times looped is $0$. We then have $\phi = \phi_0 = R(\phi)$ which clearly sufficies. Now, for the inductive hypothesis, assume that $\phi_{i-1}$ is satisfiable, and we want to prove that $\phi_i$ is satisfiable. We run the algoirthm, and at the $ith$ iteration replace the $ith$ clause with the $y$ variables we created (defined in the algorithm) to replace negations and adding pairs for unvisited variables. The pairs are guaranteed to be satisfiable based on the definition, but we must check that replacement of negations holds satisfiability. Consider the following cases: 
+        \begin{enumerate}
+            \item  The variables within the $ith$ clauses have not been visited within previous clauses. Thus, the variables have not received an assignment yet, so we just set one variable equal to $1$ and all the rest 0. 
+            \item Some variables have previously been visited. We set new variables to $1$ and maintain assignment of the previous variables. Thus, since some variables equal $1$, the clause is satisfiable. 
+            \item All variables have previously been visited already. Since the previous clauses held, there must be at least some variable from a previous clause that was $1$, and thus the $ith$ clause it also satisfied.
+        \end{enumerate}
+        Thus, we have shown $\phi^{'} = R(\phi)$ \\
+        
+        2. Now we must prove that if $\alpha^{'}$ satisfies $R(\phi)$, then $\alpha^{'} |_x$ also satisfies $\phi$. We define $\alpha^{'} |_x$ to be the assignment of $\alpha^{'}$ restricted to the $x$ variables. \\
+        
+        The above restriction is similar to the dropping of the added variables which we did in the postprocessing step. We can prove this via reverse induction. We have for the base case $i=m$. This is already the same as $\alpha^{i}$ satisfying $P(\phi)$. For the inductive hypothesis, we assume that $\phi_i$ can be satisfied by the assignment $\apha^{'}$. We have that the $\phi_i$ clause was created from the $\phi_{i-1}$ clause. Since the final assignment $\alpha^{'}$ satisfies the newly created clauses, resolution rule soundness allows us to confirm that $\alpha^{'}$ also satisfies the clause it was generated from.
+        Finally, we have proved that if $\phi$ is satisfiable, then $\phi^{'} = R(\phi)$.
+        
+        \item Prove that if we fix $k=3$, then $k$-False PositiveMonotoneSAT is in $\Psearch$. (Hint: show that it suffices to consider assignments in which exactly 3 variables are set to 0.) \\
+        
+        First, if we have fixed $k=3$, then we wish to find a satisfying argument in which at least $k$ variables are set to 0. Using the brute force solution, thus, there are $n \choose 3$ possible assignments where $k$ variables are set to 0. Since we only want to find at least some (one) such satisfying argument, we need not worry that all other variables are set to 1 even when a satisfying argument may be able to be found with $< n- 3$ variables set to 1.
+        
+        For each such assignment, we run it through the algorithm provided above, and check for correctness of the assignment. Considering worse case, since we run through $n \choose 3 = (n)(n-1)(n-2)$ assignments, the runtime of this algorithm to find the possible correct satisfying argument is $O(n^3)$, and $n^3$ is by definition polynomial or $P_{search}$.
+        
+        
         \item (optional\footnote{This problem is meant to be done based on your enjoyment/interest and only if you have time. It won't make a difference between N, L, R-, and R grades, and course staff will deprioritize questions about this problem at office hours and on Ed.}) Show that $k$-False PositiveMonotone 2-SAT is $\NPsearch$-complete.  (Hint: reduce from Independent Set.)
     \end{enumerate}
 
 
     \item (Reductions and complexity classes)  
     \begin{enumerate}
-        \item Prove that if a problem $\Pi$ is in $\Psearch$, then $\Pi\leq_p \Gamma$ for all computational problems $\Gamma$.
-        \item Show that if $\NPsearch\subseteq \Psearch$, then all problems in $\NPsearch$ are $\NPsearch$-complete.  (The converse of this statement was proved in section, so it is actually an iff.)
+        \item Prove that if a problem $\Pi$ is in $\Psearch$, then $\Pi\leq_p \Gamma$ for all computational problems $\Gamma$. \\
+        
+        If a problem $\Pi$ is in $\Psearch$, then we must prove that $\Pi\leq_p \Gamma$ for all computational problems $\Gamma$. By definition of $\Psearch$, we have that $\Pi$ is solvable in polynomial time. Thus, all that we must ensure is that for the reduction $\Pi\leq_p \Gamma$ calls a solution to $\Pi$ that runs in polynomial time, which we are guaranteed one exists because as mentioned $\Pi$ is in $\Psearch$. Other specifics about the oracles can be neglected for this specific problem. \\
+        
+        \item Show that if $\NPsearch\subseteq \Psearch$, then all problems in $\NPsearch$ are $\NPsearch$-complete.  (The converse of this statement was proved in section, so it is actually an iff.) \\
+        
+        If a problem $\Pi$ is defined as $\NPsearch$-complete, then we have that: \\
+        1. $\Pi$ is in $\NPsearch$ \\
+        2. $\Pi$ is in $\NPsearch$-hard. That is, for every $\Gamma \in \NPsearch, \Gamma \leq_p \Pi$.\\
+        
+        Based on the results of 2a, we see that for some $\Pi$ that is in $P_{search}$ can be reduced to computational problems in polynomial time. So, when $\NPsearch\subseteq \Psearch$, then all such $\Pi$  in $\NPsearch$ are in $\Psearch$, which by definition means they can reduce to computational problems that are solved in polynomial time. This is by the definition of $NP_{search}$-hard. Since we already fulfill the other requirements, this then means that the problem is $NP_{search}-complete$.
+         
+        
+        
         \item  Prove that if 
 $\Pi\leq_p \Gamma$ and $\Gamma\in \EXPsearch$, then $\Pi\in \EXPsearch$. (In other words, $\EXPsearch$ is closed under polynomial-time reductions.) 
+    \end{enumerate} \\
+    
+    Consider that $\Gamma$ is defined as the oracle call of the reduction, which in total takes time P+exp+postprocess, with the reduction and $\Pi$ both being exponential. We breakdown the runtime into different runtime pieces for all $\Pi$. 
+    
+    \begin{enumerate}
+        \item First, it is given that $\Pi\leq_p \Gamma$, so the preprocessing step takes only polynomial runtime, or $O(n^c)$ for some constant $c$.
+        \item An O(1) oracle runtime translates to a runtime of $O(b^{nc})$, since this is simply the way the oracle was defined, for some base $b$ and constant $c$. Furthermore, if we make a polynomial number of oracle calls, then this portion runtime would be $O(p \times b^{nc})$
+        \item The size of the I/O to the oracle is bounded in a polynomial manner. Thus, the post-processing step will run in time $O(s \times n^c)$ for a constant $c$ and size change $s$ in our work that may have occurred during execution of the oracle. 
     \end{enumerate}
-
-\newpage
+    
+    Notice that all portions have exponential runtime, thus it follows that for the problem $\Pi$, $\Pi\in \EXPsearch$.
+   \newpage
 
 \item (Variant of VectorSubsetSum)  
 In the Sender--Receiver Exercise on November 15, you will see that the following problem is $\NPsearch$-complete.
@@ -62,8 +119,33 @@ Assuming that result, prove that the following variant is also $\NPsearch$-compl
 {Vectors $\vec{v}_0,\vec{v}_1,\ldots,\vec{v}_{n-1}\in \N^d$, $t_0\in \N$}
 {A subset $S\subseteq [n]$ such that $\sum_{i\in S}\vec{v}_i = (t_0,t_0,\ldots,t_0)$, if such a subset $S$ exists.}
 
-    The two differences from the VectorSubsetSum problem is that the vectors are no longer restricted to have $\zo$ entries, but now all entries of the target vector are required to be equal. (Hint: reduce from the standard VectorSubsetSum problem.  Add an additional vector and an additional coordinate.)
-
+    The two differences from the VectorSubsetSum problem is that the vectors are no longer restricted to have $\zo$ entries, but now all entries of the target vector are required to be equal. (Hint: reduce from the standard VectorSubsetSum problem.  Add an additional vector and an additional coordinate.) \\
+    
+    First, note that we must prove two things to solve this problem.
+    \begin{enumerate}
+        \item VectorSubsetSumVariant: This computational problem is in $NP_{\text{search}}$. We have an algorithm that sums the vectors corresponding to the subset returned and compares with $t_0$ in polynomial time. 
+        \item VectorSubsetSumVariant: This computational problem is $NP_{\text{search}}$-hard. By reducing the VectorSubsetSumVariant (VSSV) problem to the VectorSusetSum (VSS) problem, we can show that the vector sum
+    \end{enumerate} \\
+    
+    We are going to want to reduce VSS to VSSV. \\
+    
+    Preprocessing: Suppose the set of vectors is $v_0, v_1, \dots, v_{n-1}$ and without loss of generality, the subset solution $S$ refers to the fact that vectors $v_0$ and $v_1$ sum to $t$; that is, $v_0 + v_1 = t$. Then, we must find a vector to add to the set that satisfies the condition that all entries of the subset solution are $t_0$. We create such a vector and solve. Again, WLOG, $v_0 + v_1 + z = t_0$, and solving for $z$, we have that $z = t_0 - t$. Then, we add this vector to the vector set. We then want to add an additional coordinate to each vector depending on the type of vector. This is because with the newly added vector, there may be multiple solutions to the VSSV problem that do not necessarily solve the VSS problem when provided, such as potentially using a solution with the newly added vector. Thus, the coordinate we must add is $0$ for original vectors already contained and $t_0$ for the newly added vector. Then, because all entries must be equal to $t_0$ and we just added a $t_0$ term to the vector containing $z$, $z$ will have to be present within the final solution to the problem along with other variables that are a solution to VSS. \\
+    
+    Oracle: We then make an oracle call to VSSV. With the construction of the unique vector $z$, the output to the oracle will be $z$ along with the set of vectors $S$ that is a solution to VSS. If no solution exists, $\bot$ will be output. 
+    
+    Post-process: As mentioned we can find the solution set $S$ by simply removing the $z$ vector added. 
+    
+    Runtime: \\
+    
+    Preprocessing: This runtime will take $O(1)$ time to construct the new vector $z$ and $O(n+1)$ time to loop through all the vectors and add a corresponding coordinate. Thus, the overall runtime for this step is $O(n)$. \\
+    
+    Oracle: We then make an $O(1)$ oracle call to solve VSS. \\
+    
+    Postprocess: We simply return $S - z$ as the solution set, where $S$ is the output of the oracle. Thus, this is $O(1)$ runtime. 
+    
+    The overall runtime is therefore $O(n)$ which is polynomial. Thus, through reduction via an $NP_{search}$-complete problem, it follows that VSSV is a $NP_{search}$-hard problem. \\
+    
+    Now we must show VSSV is in $NP_{search}$. For any particular solution set $S_i$ containing numbers corresponding to a set of vectors $w_0 \dots w_{m-1}$ where $m<=n$, we simply add the vectors $w_0 \dots w_{m-1}$ and compare to $(t_0, t_0, \dots, t_0)$. This sum and comparison will take $O(m)$ time, which is polynomial. Thus, we have shown VSSV is in $NP_{search}$. By proving the two factors about VSSV, we have thus shown VSSV is $NP_{search}$-complete and we are done. 
     \end{enumerate}
 
 \end{document}
